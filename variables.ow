@@ -11,6 +11,28 @@ variables
 		6: playersInView
 		7: playerId
 		8: beamID
+		9: uppercutCooldown
+		10: uppercutHudVisible
+		11: uppercutHudId
+		26: slamTimer
+		27: IndicatorSlam
+		28: slamRaycastEndPos
+		29: slamTrackedPosition
+		30: slamEndPosition
+		31: previousTickPosition
+		32: tickRaycast
+		33: originalRaycastHeight
+		34: raycastTryNumber
+		35: showIndicator
+		36: spotFound
+		37: BottomLine
+		38: TopLine
+		39: RightLine
+		40: LeftLine
+		41: DiamondIndicator
+		42: isCloseSlam
+		43: hasUsedSlam
+		44: TrueSlamVics
 
 		//roadhog
 		12: roadhogHookActive

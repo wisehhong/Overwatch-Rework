@@ -229,3 +229,267 @@ rule("Uppercut Hit")
 	}
 }
 
+rule("New slam button disabled")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	actions
+	{
+		Disallow Button(Event Player, Button(Ability 1));
+		Wait Until(Hero Of(Event Player) != Hero(Doomfist), 999999);
+		Allow Button(Event Player, Button(Ability 1));
+	}
+}
+
+rule("(ALL SLAM) EVERYWHERE New slam indicator & allowance")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		Doomfist;
+	}
+
+	conditions
+	{
+		Ability Cooldown(Event Player, Button(Ability 1)) == 0;
+		Is Firing Secondary(Event Player) == False;
+		Altitude Of(Event Player) > 3;
+		Is Using Ability 1(Event Player) == False;
+		Event Player.isUppercutting == False;
+		Is Using Ultimate(Event Player) == False;
+	}
+
+	actions
+	{
+		Event Player.slamRaycastEndPos = Ray Cast Hit Position(Position Of(Event Player), Eye Position(Event Player) + Facing Direction Of(
+			Event Player) * 15, Null, All Players(All Teams), False);
+		disabled If(Distance Between(Event Player.slamRaycastEndPos, Nearest Walkable Position(Event Player.slamRaycastEndPos)) > 0.250);
+		Event Player.originalRaycastHeight = Y Component Of(Position Of(Event Player)) - Y Component Of(Event Player.slamRaycastEndPos);
+		Event Player.tickRaycast = Ray Cast Hit Position(Event Player.slamRaycastEndPos, Event Player.slamRaycastEndPos - Vector(0,
+			40 - Event Player.originalRaycastHeight, 0), Null, All Players(All Teams), False);
+		Event Player.raycastTryNumber = 1;
+		disabled While(Distance Between(Event Player.tickRaycast, Nearest Walkable Position(Event Player.tickRaycast))
+			> 0.250 && Event Player.raycastTryNumber < 30);
+		Event Player.slamRaycastEndPos -= Facing Direction Of(Event Player) / 2;
+		Event Player.tickRaycast = Ray Cast Hit Position(Event Player.slamRaycastEndPos, Event Player.slamRaycastEndPos - Vector(0,
+			40 - Event Player.originalRaycastHeight, 0), Null, All Players(All Teams), False);
+		Event Player.raycastTryNumber += 1;
+		End;
+		If(Event Player.raycastTryNumber >= 30);
+			Event Player.spotFound = False;
+		Else;
+			Event Player.slamRaycastEndPos = Event Player.tickRaycast;
+			Event Player.spotFound = True;
+		End;
+		Else;
+		Event Player.spotFound = True;
+		End;
+		If(Event Player.spotFound && Y Component Of(Facing Direction Of(Event Player)) < 0.250 && Absolute Value(Angle Between Vectors(
+			Facing Direction Of(Event Player), Vector Towards(Position Of(Event Player), Event Player.slamRaycastEndPos)))
+			< 15 && Y Component Of(Position Of(Event Player)) - Y Component Of(Event Player.slamRaycastEndPos) < 30 && Distance Between(
+			Position Of(Event Player) * Vector(1, 0, 1), Event Player.slamRaycastEndPos * Vector(1, 0, 1)) < 15);
+			If(Event Player.DiamondIndicator == 0);
+				"BOTTOM LINE"
+				Create Effect(Event Player, Ring, Color(Blue), Update Every Frame(Event Player.slamRaycastEndPos + Normalize(Cross Product(
+					Facing Direction Of(Event Player) * Vector(1, 0, 1), Vector(0, 1, 0)) * 0.750) + Vector(0, 0.150, 0)), 0.200,
+					Visible To Position and Radius);
+				Event Player.BottomLine = Last Created Entity;
+				"TOP LINE"
+				Create Effect(Event Player, Ring, Color(Blue), Update Every Frame(Event Player.slamRaycastEndPos + Normalize(
+					Facing Direction Of(Event Player) * Vector(1, 0, 1)) * 8 + Normalize(Cross Product(Facing Direction Of(Event Player) * Vector(
+					1, 0, 1), Vector(0, 1, 0))) * 4.463) + Vector(0, 0.150, 0), 0.200,
+					Visible To Position and Radius);
+				Event Player.TopLine = Last Created Entity;
+				"RIGHT SIDE"
+				Create Effect(Event Player, Ring, Color(Blue), Update Every Frame(Event Player.slamRaycastEndPos + Normalize(Cross Product(
+					Facing Direction Of(Event Player) * Vector(1, 0, 1), Vector(0, 1, 0)) * 0.750) + Vector(0, 0.150, 0)), 0.200,
+					Visible To Position and Radius);
+				Event Player.RightLine = Last Created Entity;
+				"LEFT SIDE"
+				Create Effect(Event Player, Ring, Color(Blue), Update Every Frame(Event Player.slamRaycastEndPos + Normalize(
+					Facing Direction Of(Event Player) * Vector(1, 0, 1)) * 8 + Normalize(Cross Product(Facing Direction Of(Event Player) * Vector(
+					1, 0, 1), Vector(0, 1, 0))) * -4.463) + Vector(0, 0.150, 0), 0.200,
+					Visible To Position and Radius);
+				Event Player.LeftLine = Last Created Entity;
+				Event Player.DiamondIndicator = Array(Event Player.BottomLine, Event Player.TopLine, Event Player.RightLine,
+					Event Player.LeftLine);
+			End;
+			Event Player.showIndicator = True;
+		Else;
+			If(Event Player.DiamondIndicator);
+				disabled Destroy Effect(Event Player.BottomLine);
+				disabled Destroy Effect(Event Player.TopLine);
+				Destroy Effect(Event Player.DiamondIndicator);
+				Wait(0.016, Ignore Condition);
+				Event Player.DiamondIndicator = 0;
+				Event Player.showIndicator = False;
+			End;
+		End;
+		Wait(0.016, Ignore Condition);
+		If(Ability Cooldown(Event Player, Button(Ability 1)) == 0 && !Is Firing Secondary(Event Player) && Altitude Of(Event Player)
+			> 3 && !Is Using Ability 1(Event Player) && Event Player.isUppercutting == False);
+			Loop;
+		Else;
+			If(Altitude Of(Event Player) > 3 && !Is Using Ability 1(Event Player));
+				Event Player.showIndicator = False;
+			End;
+			If(Event Player.DiamondIndicator);
+				disabled Destroy Effect(Event Player.BottomLine);
+				disabled Destroy Effect(Event Player.TopLine);
+				Destroy Effect(Event Player.DiamondIndicator);
+				Wait(0.016, Ignore Condition);
+				Event Player.DiamondIndicator = 0;
+			End;
+		End;
+	}
+}
+
+rule("Seismic slam Bounce / Pull")
+{
+	event
+	{
+		Player Dealt Damage;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Ability == Button(Ability 1);
+		Hero Of(Attacker) == Hero(Doomfist);
+	}
+
+	actions
+	{
+		Set Gravity(Victim, 50);
+		If(Distance Between(Event Player, Victim) < 2.500);
+			disabled Press Button(Event Player.TrueSlamVics, Button(Jump));
+			Apply Impulse(Victim, Normalize(Vector(X Component Of(Facing Direction Of(Event Player)), 0, Z Component Of(Facing Direction Of(
+				Event Player)))) + Vector(0, 1, 0), Max(0, 8.500 - Distance Between(Event Player, Victim) * 2), To World,
+				Cancel Contrary Motion XYZ);
+			Set Gravity(Victim, 100);
+			Victim.isCloseSlam = True;
+		Else If(Distance Between(Event Player.TrueSlamVics, Event Player) <= 8);
+			disabled Press Button(Event Player.TrueSlamVics, Button(Jump));
+			Apply Impulse(Victim, Normalize(Vector(X Component Of(Vector Towards(Victim, Event Player)), 0, Z Component Of(Vector Towards(
+				Victim, Event Player)))) + Vector(0, 1, 0), 5 + Distance Between(Event Player, Victim) / 4, To World,
+				Cancel Contrary Motion XYZ);
+			Set Gravity(Victim, 100);
+			Victim.isCloseSlam = False;
+		End;
+	}
+}
+
+rule("New indicator slam (2.0)")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		Doomfist;
+	}
+
+	conditions
+	{
+		Is Button Held(Event Player, Button(Ability 1)) == True;
+		Ability Cooldown(Event Player, Button(Ability 1)) == 0;
+		Is Using Ability 2(Event Player) == False;
+		Is Firing Secondary(Event Player) == False;
+		(Has Status(Event Player, Frozen) || Has Status(Event Player, Asleep) || Has Status(Event Player, Frozen) || Has Status(
+			Event Player, Stunned) || Has Status(Event Player, Knocked Down) || Has Status(Event Player, Rooted)) == False;
+		Altitude Of(Event Player) > 3;
+		Event Player.hasUsedSlam == False;
+		Event Player.showIndicator == True;
+		Event Player.isUppercutting == False;
+		Is In Line of Sight(Event Player, Event Player.slamRaycastEndPos, Barriers Do Not Block LOS) == True;
+		Is In View Angle(Event Player, Event Player.slamRaycastEndPos, 45) == True;
+	}
+
+	actions
+	{
+		Event Player.IndicatorSlam = True;
+		Allow Button(Event Player, Button(Ability 1));
+		Start Holding Button(Event Player, Button(Ability 1));
+		Event Player.hasUsedSlam = True;
+		Event Player.slamEndPosition = Event Player.slamRaycastEndPos;
+		Event Player.slamTrackedPosition = Position Of(Event Player);
+		Chase Player Variable At Rate(Event Player, slamTrackedPosition, Event Player.slamEndPosition, 25, None);
+		Set Gravity(Event Player, 0);
+		Start Forcing Throttle(Event Player, 0, 0, 0, 0, 0, 0);
+		Disallow Button(Event Player, Button(Primary Fire));
+		Disallow Button(Event Player, Button(Secondary Fire));
+		Disallow Button(Event Player, Button(Ability 2));
+		Start Forcing Player Position(Event Player, Event Player.slamTrackedPosition, True);
+		While(!(Event Player.slamTrackedPosition == Event Player.slamEndPosition || !Is Using Ability 1(Event Player) || Is On Ground(
+			Event Player)));
+			Event Player.previousTickPosition = Eye Position(Event Player);
+			Wait(0.016, Ignore Condition);
+			Disallow Button(Event Player, Button(Ability 1));
+			Stop Holding Button(Event Player, Button(Ability 1));
+			Event Player.tickRaycast = Ray Cast Hit Position(Event Player.previousTickPosition, Eye Position(Event Player), Null, All Players(
+				All Teams), False);
+			If(Event Player.tickRaycast != Eye Position(Event Player));
+				Stop Forcing Player Position(Event Player);
+				Start Forcing Player Position(Event Player, Event Player.tickRaycast, False);
+				Break;
+			End;
+		End;
+		Stop Chasing Player Variable(Event Player, slamTrackedPosition);
+		Wait(0.016, Ignore Condition);
+		Apply Impulse(Event Player, Velocity Of(Event Player) * -1, Speed Of(Event Player), To World, Incorporate Contrary Motion);
+		Set Gravity(Event Player, 100);
+		Stop Forcing Player Position(Event Player);
+		Wait Until(!Is Using Ability 1(Event Player), 999999);
+		Stop Forcing Throttle(Event Player);
+		Allow Button(Event Player, Button(Primary Fire));
+		Allow Button(Event Player, Button(Secondary Fire));
+		Allow Button(Event Player, Button(Ability 2));
+		Event Player.hasUsedSlam = False;
+		Event Player.IndicatorSlam = False;
+	}
+}
+
+rule("start slam timer (REVAMP)")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		Doomfist;
+	}
+
+	conditions
+	{
+		disabled Is Using Ability 1(Event Player) == True;
+		Is Button Held(Event Player, Button(Ability 1)) == True;
+		Ability Cooldown(Event Player, Button(Ability 1)) == False;
+		Event Player.showIndicator == True;
+		Event Player.IndicatorSlam == True;
+	}
+
+	actions
+	{
+		Wait Until(Is Using Ability 1(Event Player), 99999);
+		Event Player.slamTimer = 0;
+		Disallow Button(Event Player, Button(Ability 2));
+		Disallow Button(Event Player, Button(Ability 1));
+		Disallow Button(Event Player, Button(Secondary Fire));
+		Event Player.slamTimer = 65.010;
+		Stop Chasing Player Variable(Event Player, slamTimer);
+		Set Damage Dealt(Event Player, 108.350);
+		Wait(0.200, Ignore Condition);
+		Wait Until(Is On Ground(Event Player) || Ability Cooldown(Event Player, Button(Ability 1)) == True, 999999);
+		Wait(0.350, Ignore Condition);
+		Allow Button(Event Player, Button(Ability 2));
+		Allow Button(Event Player, Button(Ability 1));
+		Allow Button(Event Player, Button(Secondary Fire));
+		Set Damage Dealt(Event Player, 100);
+	}
+}
+
