@@ -1,0 +1,160 @@
+rule("Doomfist HP")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		Doomfist;
+	}
+
+	actions
+	{
+		Set Max Health(Event Player, 85.700);
+	}
+}
+
+rule("Uppercut")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		Doomfist;
+	}
+
+	conditions
+	{
+        Is Reloading(Event Player) == True;
+		Is Using Ability 2(Event Player) == False;
+		Is Using Ability 1(Event Player) == False;
+		Is Firing Secondary(Event Player) == False;
+        Is Using Ultimate(Event Player) == False;
+		(Has Status(Event Player, Frozen) || Has Status(Event Player, Asleep) || Has Status(Event Player, Frozen) || Has Status(
+			Event Player, Stunned) || Has Status(Event Player, Knocked Down) || Has Status(Event Player, Rooted)) == False;
+	}
+
+	actions
+	{
+		Event Player.UpperFloat = True;
+		Event Player.isUppercutting = True;
+		Disable Movement Collision With Players(Event Player);
+		Disallow Button(Event Player, Button(Melee));
+		Disallow Button(Event Player, Button(Ability 1));
+		Disallow Button(Event Player, Button(Ability 2));
+		Disallow Button(Event Player, Button(Primary Fire));
+		Set Secondary Fire Enabled(Event Player, False);
+		Cancel Primary Action(Event Player);
+		Apply Impulse(Event Player, Velocity Of(Event Player), -1 * Speed Of(Event Player), To World, Incorporate Contrary Motion);
+		Apply Impulse(Event Player, Facing Direction Of(Event Player) * Vector(1, 0, 1), 5, To World, Incorporate Contrary Motion);
+		Set Gravity(Event Player, 0);
+		Start Forcing Throttle(Event Player, 0, 0, 0, 0, 0, 0);
+		Event Player.hitPlayers = Empty Array;
+		Wait(0.150, Ignore Condition);
+		Apply Impulse(Event Player, Vector(0, 1, 0), 40, To World, Incorporate Contrary Motion);
+		Wait(0.100, Ignore Condition);
+		Apply Impulse(Event Player, Vector(0, -1, 0), Max(0, Speed Of In Direction(Event Player, Vector(0, 1, 0))), To World,
+		Incorporate Contrary Motion);
+		Wait(0.016, Ignore Condition);
+		Apply Impulse(Event Player, Vector(0, 1, 0), 2.500, To World, Incorporate Contrary Motion);
+		Set Gravity(Event Player, 0);
+		Event Player.isUppercutting = False;
+		Enable Movement Collision With Players(Event Player);
+		Allow Button(Event Player, Button(Melee));
+		Allow Button(Event Player, Button(Primary Fire));
+        Allow Button(Event Player, Button(Ability 2));
+		Set Secondary Fire Enabled(Event Player, True);
+		Wait(0.350, Ignore Condition);
+		Stop Forcing Throttle(Event Player);
+		Wait(0.150, Ignore Condition);
+		disabled Wait Until(Is Using Ability 1(Event Player) == False, 99999);
+		Set Gravity(Event Player, 50);
+		Wait(0.250, Ignore Condition);
+		Set Gravity(Event Player, 100);
+		Event Player.UpperFloat = False;
+	}
+}
+
+       
+
+rule("uppercut momentum")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.uppercutMomentum == True;
+	}
+
+	actions
+	{
+		Event Player.upperLockTimer = 0.600;
+		Chase Player Variable Over Time(Event Player, upperLockTimer, 0, 0.600, None);
+		Start Forcing Throttle(Event Player, 0, 0, 0, 0, 0, 0);
+		Wait(0.016, Ignore Condition);
+		Apply Impulse(Event Player, Vector(0, 1, 0), 15, To Player, Cancel Contrary Motion XYZ);
+		Apply Impulse(Event Player, Vector(X Component Of(Facing Direction Of(Event Player.uppercutDealer)), 0, Z Component Of(
+			Facing Direction Of(Event Player.uppercutDealer))), 5, To World, Cancel Contrary Motion XYZ);
+		Event Player.uppercutMomentum = False;
+	}
+}
+
+rule("uppercut momentum stop")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.upperLockTimer == 0;
+	}
+
+	actions
+	{
+		Stop Chasing Player Variable(Event Player, upperLockTimer);
+		disabled If(!Is Using Ability 1(Event Player));
+		Stop Forcing Throttle(Event Player);
+	}
+}
+
+rule("uppercut hit")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		Doomfist;
+	}
+
+	conditions
+	{
+		Event Player.isUppercutting == True;
+	}
+
+	actions
+	{
+		Event Player.playersInView = Players in View Angle(Event Player, Opposite Team Of(Team Of(Event Player)), 45);
+		For Player Variable(Event Player, playerId, 0, Count Of(Event Player.playersInView), 1);
+			Event Player.beamID = Event Player.playersInView[Event Player.playerId];
+			If(!Array Contains(Event Player.hitPlayers, Event Player.beamID) && Is In Line of Sight(Event Player, Event Player.beamID,
+				Barriers Do Not Block LOS) && Distance Between(Event Player, Event Player.beamID) < 5);
+				Event Player.beamID.uppercutMomentum = True;
+				Event Player.beamID.uppercutDealer = Event Player;
+				"50 with the 20% buff"
+				Damage(Event Player.beamID, Event Player, 41.670);
+				Modify Player Variable(Event Player, hitPlayers, Append To Array, Event Player.beamID);
+			End;
+		End;
+		Wait(0.016, Ignore Condition);
+		Loop If(Event Player.isUppercutting == True);
+	}
+}
+

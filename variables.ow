@@ -1,0 +1,13 @@
+variables
+{
+	player:
+		0: isUppercutting
+		1: uppercutMomentum
+		2: uppercutDealer
+		3: upperLockTimer
+		4: UpperFloat
+		5: hitPlayers
+		6: playersInView
+		7: playerId
+		8: beamID
+}
