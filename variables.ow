@@ -13,25 +13,20 @@ variables
 		8: beamID
 
 		//roadhog
-		9: roadhogHookActive
-		10: roadhogHookStartPos
-		11: roadhogHookBonus
-		12: roadhogEmpoweredShot
-		13: roadhogPrimaryHeld
-		14: roadhogBreatherActive
-		15: roadhogOverhealth
-		16: roadhogPigPenActive
-		17: roadhogPigPenArmed
-		18: roadhogPigPenPos
-		19: roadhogPigPenCooldown
-		20: roadhogPigPenInputHeld
-		21: roadhogLoopIndex
-		22: roadhogTargets
+		12: roadhogHookActive
+		13: roadhogHookStartPos
+		14: roadhogHookBonus
+		15: roadhogEmpoweredShot
+		16: roadhogPrimaryHeld
+		17: roadhogBreatherActive
+		18: roadhogOverhealth
+		19: roadhogPigPenActive
+		20: roadhogPigPenArmed
+		21: roadhogPigPenPos
+		22: roadhogPigPenCooldown
+		23: roadhogPigPenInputHeld
+		24: roadhogLoopIndex
+		25: roadhogTargets
 
-		//doomfist
-		23: doomfistOverhealth
-		24: doomfistOverhealthDecayTimer
 
-		//junkrat
-		25: junkratFragLauncherLoop
 }

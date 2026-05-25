@@ -9,11 +9,11 @@ rule("Doomfist HP")
 
 	actions
 	{
-		Set Max Health(Event Player, 85.700 + (Event Player.doomfistOverhealth / 7.500));
+		Set Max Health(Event Player, 85.700);
 	}
 }
 
-rule("Doomfist overhealth decay")
+rule("Doomfist Uppercut HUD")
 {
 	event
 	{
@@ -24,19 +24,37 @@ rule("Doomfist overhealth decay")
 
 	conditions
 	{
-		Event Player.doomfistOverhealth > 0 || Event Player.doomfistOverhealthDecayTimer > 0;
+		Event Player.uppercutHudVisible == False;
 	}
 
 	actions
 	{
-		If(Event Player.doomfistOverhealthDecayTimer > 0);
-			Wait(0.100, Ignore Condition);
-			Event Player.doomfistOverhealthDecayTimer = Max(0, Event Player.doomfistOverhealthDecayTimer - 0.100);
-		Else If(Event Player.doomfistOverhealth > 0);
-			Wait(0.100, Ignore Condition);
-			Event Player.doomfistOverhealth = Max(0, Event Player.doomfistOverhealth - 0.300);
-		End;
-		Loop If(Event Player.doomfistOverhealth > 0 || Event Player.doomfistOverhealthDecayTimer > 0);
+		Create HUD Text(Event Player, Custom String("Uppercut: {0}", Event Player.uppercutCooldown), Null, Null, Right, 5,
+		Color(White), Color(White), Color(White), Visible To And String, Default Visibility);
+		Event Player.uppercutHudId = Last Text ID;
+		Event Player.uppercutHudVisible = True;
+	}
+}
+
+rule("Doomfist Uppercut HUD cleanup")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Event Player.uppercutHudVisible == True;
+		Hero Of(Event Player) != Hero(Doomfist);
+	}
+
+	actions
+	{
+		Destroy HUD Text(Event Player.uppercutHudId);
+		Event Player.uppercutHudVisible = False;
 	}
 }
 
@@ -56,6 +74,7 @@ rule("Uppercut")
 		Is Using Ability 1(Event Player) == False;
 		Is Firing Secondary(Event Player) == False;
         Is Using Ultimate(Event Player) == False;
+		Event Player.uppercutCooldown == 0;
 		(Has Status(Event Player, Frozen) || Has Status(Event Player, Asleep) || Has Status(Event Player, Frozen) || Has Status(
 		Event Player, Stunned) || Has Status(Event Player, Knocked Down) || Has Status(Event Player, Rooted)) == False;
 	}
@@ -64,6 +83,7 @@ rule("Uppercut")
 	{
 		Event Player.UpperFloat = True;
 		Event Player.isUppercutting = True;
+		Event Player.uppercutCooldown = 6;
 		Disable Movement Collision With Players(Event Player);
 		Disallow Button(Event Player, Button(Melee));
 		Disallow Button(Event Player, Button(Ability 1));
@@ -99,6 +119,29 @@ rule("Uppercut")
 		Wait(0.250, Ignore Condition);
 		Set Gravity(Event Player, 100);
 		Event Player.UpperFloat = False;
+	}
+}
+
+rule("Uppercut cooldown ticker")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		Doomfist;
+	}
+
+	conditions
+	{
+		Event Player.uppercutCooldown > 0;
+	}
+
+	actions
+	{
+		Wait(1.000, Ignore Condition);
+		Modify Player Variable(Event Player, uppercutCooldown, Subtract, 1.000);
+		Event Player.uppercutCooldown = Max(0, Event Player.uppercutCooldown);
+		Loop If(Event Player.uppercutCooldown > 0);
 	}
 }
 
@@ -178,8 +221,6 @@ rule("Uppercut Hit")
 				Event Player.beamID.uppercutDealer = Event Player;
 				"50 with the 20% buff"
 				Damage(Event Player.beamID, Event Player, 41.670);
-				Modify Player Variable(Event Player, doomfistOverhealth, Add, 262.500);
-				Event Player.doomfistOverhealthDecayTimer = 3;
 				Modify Player Variable(Event Player, hitPlayers, Append To Array, Event Player.beamID);
 			End;
 		End;
