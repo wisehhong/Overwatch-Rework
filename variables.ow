@@ -33,6 +33,8 @@ variables
 		42: isCloseSlam
 		43: hasUsedSlam
 		44: TrueSlamVics
+		45: slamTimerHudVisible
+		46: slamTimerHudId
 
 		//roadhog
 		12: roadhogHookActive

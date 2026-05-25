@@ -130,6 +130,38 @@ rule("Uppercut cooldown ticker")
 	}
 }
 
+rule("slam damage hud")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		Doomfist;
+	}
+
+	conditions
+	{
+		Event Player.IndicatorSlam == True;
+	}
+
+	actions
+	{
+		If(Event Player.slamTimerHudVisible == True);
+			Destroy HUD Text(Event Player.slamTimerHudId);
+		End;
+		Create HUD Text(Event Player, Custom String("Slam Damage: {0}", Round To Integer(Event Player.slamTimer / 60 * 100, To
+			Nearest)), Null, Null, Top, 0.650, Color(Blue), Color(White), Color(Blue), Visible To And String, Default Visibility);
+		Event Player.slamTimerHudId = Last Text ID;
+		Event Player.slamTimerHudVisible = True;
+		Wait(0.016, Ignore Condition);
+		Loop If(Event Player.IndicatorSlam == True);
+		If(Event Player.slamTimerHudVisible == True);
+			Destroy HUD Text(Event Player.slamTimerHudId);
+			Event Player.slamTimerHudVisible = False;
+		End;
+	}
+}
+
        
 
 rule("Uppercut Momentum")
@@ -437,6 +469,10 @@ rule("New indicator slam (2.0)")
 		Allow Button(Event Player, Button(Ability 2));
 		Event Player.hasUsedSlam = False;
 		Event Player.IndicatorSlam = False;
+		If(Event Player.slamTimerHudVisible == True);
+			Destroy HUD Text(Event Player.slamTimerHudId);
+			Event Player.slamTimerHudVisible = False;
+		End;
 	}
 }
 
@@ -460,16 +496,16 @@ rule("start slam timer (REVAMP)")
 
 	actions
 	{
-		Wait Until(Is Using Ability 1(Event Player), 99999);
 		Event Player.slamTimer = 0;
+		Chase Player Variable Over Time(Event Player, slamTimer, 125, 1.270, None);
 		Disallow Button(Event Player, Button(Ability 2));
 		Disallow Button(Event Player, Button(Ability 1));
 		Disallow Button(Event Player, Button(Secondary Fire));
-		Event Player.slamTimer = 65.010;
-		Stop Chasing Player Variable(Event Player, slamTimer);
-		Set Damage Dealt(Event Player, 108.350);
 		Wait(0.200, Ignore Condition);
 		Wait Until(Is On Ground(Event Player) || Ability Cooldown(Event Player, Button(Ability 1)) == True, 999999);
+		Event Player.slamTimer = Max(0, Event Player.slamTimer - 0.400);
+		Stop Chasing Player Variable(Event Player, slamTimer);
+		Set Damage Dealt(Event Player, Event Player.slamTimer / 60 * 100);
 		Wait(0.350, Ignore Condition);
 		Allow Button(Event Player, Button(Ability 2));
 		Allow Button(Event Player, Button(Ability 1));
