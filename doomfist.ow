@@ -9,7 +9,34 @@ rule("Doomfist HP")
 
 	actions
 	{
-		Set Max Health(Event Player, 85.700);
+		Set Max Health(Event Player, 85.700 + (Event Player.doomfistOverhealth / 7.500));
+	}
+}
+
+rule("Doomfist overhealth decay")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		Doomfist;
+	}
+
+	conditions
+	{
+		Event Player.doomfistOverhealth > 0 || Event Player.doomfistOverhealthDecayTimer > 0;
+	}
+
+	actions
+	{
+		If(Event Player.doomfistOverhealthDecayTimer > 0);
+			Wait(0.100, Ignore Condition);
+			Event Player.doomfistOverhealthDecayTimer = Max(0, Event Player.doomfistOverhealthDecayTimer - 0.100);
+		Else If(Event Player.doomfistOverhealth > 0);
+			Wait(0.100, Ignore Condition);
+			Event Player.doomfistOverhealth = Max(0, Event Player.doomfistOverhealth - 0.300);
+		End;
+		Loop If(Event Player.doomfistOverhealth > 0 || Event Player.doomfistOverhealthDecayTimer > 0);
 	}
 }
 
@@ -24,13 +51,13 @@ rule("Uppercut")
 
 	conditions
 	{
-        Is Reloading(Event Player) == True;
+        Is Button Held(Event Player, Button(Interact)) == True;
 		Is Using Ability 2(Event Player) == False;
 		Is Using Ability 1(Event Player) == False;
 		Is Firing Secondary(Event Player) == False;
         Is Using Ultimate(Event Player) == False;
 		(Has Status(Event Player, Frozen) || Has Status(Event Player, Asleep) || Has Status(Event Player, Frozen) || Has Status(
-			Event Player, Stunned) || Has Status(Event Player, Knocked Down) || Has Status(Event Player, Rooted)) == False;
+		Event Player, Stunned) || Has Status(Event Player, Knocked Down) || Has Status(Event Player, Rooted)) == False;
 	}
 
 	actions
@@ -77,7 +104,7 @@ rule("Uppercut")
 
        
 
-rule("uppercut momentum")
+rule("Uppercut Momentum")
 {
 	event
 	{
@@ -104,7 +131,7 @@ rule("uppercut momentum")
 	}
 }
 
-rule("uppercut momentum stop")
+rule("Uppercut Momentum Stop")
 {
 	event
 	{
@@ -126,7 +153,7 @@ rule("uppercut momentum stop")
 	}
 }
 
-rule("uppercut hit")
+rule("Uppercut Hit")
 {
 	event
 	{
@@ -151,6 +178,8 @@ rule("uppercut hit")
 				Event Player.beamID.uppercutDealer = Event Player;
 				"50 with the 20% buff"
 				Damage(Event Player.beamID, Event Player, 41.670);
+				Modify Player Variable(Event Player, doomfistOverhealth, Add, 262.500);
+				Event Player.doomfistOverhealthDecayTimer = 3;
 				Modify Player Variable(Event Player, hitPlayers, Append To Array, Event Player.beamID);
 			End;
 		End;

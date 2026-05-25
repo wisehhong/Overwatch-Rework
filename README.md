@@ -44,6 +44,7 @@ This repo is intended for rapid iteration in Workshop format so changes can be t
 ## Repository Structure
 
 - `doomfist.ow`: Current Workshop implementation for Doomfist rework logic.
+- `junkrat.ow`: Current Workshop implementation for Junkrat Frag Launcher rework logic.
 - `variables.ow`: Player/global variable mapping reference used by Workshop scripts.
 
 ## Design Targets

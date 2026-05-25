@@ -1,6 +1,7 @@
 variables
 {
 	player:
+		//doomfist
 		0: isUppercutting
 		1: uppercutMomentum
 		2: uppercutDealer
@@ -10,6 +11,8 @@ variables
 		6: playersInView
 		7: playerId
 		8: beamID
+
+		//roadhog
 		9: roadhogHookActive
 		10: roadhogHookStartPos
 		11: roadhogHookBonus
@@ -24,4 +27,11 @@ variables
 		20: roadhogPigPenInputHeld
 		21: roadhogLoopIndex
 		22: roadhogTargets
+
+		//doomfist
+		23: doomfistOverhealth
+		24: doomfistOverhealthDecayTimer
+
+		//junkrat
+		25: junkratFragLauncherLoop
 }
