@@ -10,4 +10,18 @@ variables
 		6: playersInView
 		7: playerId
 		8: beamID
+		9: roadhogHookActive
+		10: roadhogHookStartPos
+		11: roadhogHookBonus
+		12: roadhogEmpoweredShot
+		13: roadhogPrimaryHeld
+		14: roadhogBreatherActive
+		15: roadhogOverhealth
+		16: roadhogPigPenActive
+		17: roadhogPigPenArmed
+		18: roadhogPigPenPos
+		19: roadhogPigPenCooldown
+		20: roadhogPigPenInputHeld
+		21: roadhogLoopIndex
+		22: roadhogTargets
 }

@@ -1,0 +1,270 @@
+rule("Roadhog HP")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		Roadhog;
+	}
+
+	actions
+	{
+		Set Max Health(Event Player, 86.667);
+	}
+}
+
+rule("Roadhog Scrap Gun baseline")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		Roadhog;
+	}
+
+	conditions
+	{
+		Event Player.roadhogEmpoweredShot == False;
+	}
+
+	actions
+	{
+		"Baseline damage is lowered so close hook combos are less free; hook distance bonus can earn one-shots."
+		Set Damage Dealt(Event Player, 90);
+	}
+}
+
+rule("Roadhog Shrapnel Launcher baseline")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		Roadhog;
+	}
+
+	actions
+	{
+		"Extends effective range of Scrap Gun secondary shrapnel projectile."
+		Set Projectile Speed(Event Player, 125);
+	}
+}
+
+rule("Roadhog Chain Hook start")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		Roadhog;
+	}
+
+	conditions
+	{
+		Is Using Ability 2(Event Player) == True;
+		Event Player.roadhogHookActive == False;
+	}
+
+	actions
+	{
+		Event Player.roadhogHookActive = True;
+		Event Player.roadhogHookStartPos = Position Of(Event Player);
+		Event Player.roadhogHookBonus = 0;
+		Wait(0.650, Ignore Condition);
+		Event Player.roadhogTargets = Players Within Radius(Event Player, 5, Opposite Team Of(Team Of(Event Player)), Surfaces);
+		For Player Variable(Event Player, roadhogLoopIndex, 0, Count Of(Event Player.roadhogTargets), 1);
+			Event Player.playerId = Event Player.roadhogTargets[Event Player.roadhogLoopIndex];
+			If(Distance Between(Event Player.roadhogHookStartPos, Event Player.playerId) > 8);
+				Event Player.roadhogHookBonus = Min(1, Max(0, (Distance Between(Event Player.roadhogHookStartPos, Event Player.playerId) - 8) / 12));
+				Event Player.roadhogEmpoweredShot = True;
+				Wait(0.120, Ignore Condition);
+				If(Has Status(Event Player.playerId, Stunned));
+					Clear Status(Event Player.playerId, Stunned);
+				End;
+				Break;
+			End;
+		End;
+		Set Ability Cooldown(Event Player, Button(Ability 2), 4);
+		Event Player.roadhogHookActive = False;
+	}
+}
+
+rule("Roadhog empowered next primary")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		Roadhog;
+	}
+
+	conditions
+	{
+		Event Player.roadhogEmpoweredShot == True;
+		Is Firing Primary(Event Player) == True;
+		Event Player.roadhogPrimaryHeld == False;
+	}
+
+	actions
+	{
+		Event Player.roadhogPrimaryHeld = True;
+		Set Damage Dealt(Event Player, 90 + (90 * Event Player.roadhogHookBonus));
+		Wait(0.200, Ignore Condition);
+		Set Damage Dealt(Event Player, 90);
+		Event Player.roadhogHookBonus = 0;
+		Event Player.roadhogEmpoweredShot = False;
+	}
+}
+
+rule("Roadhog primary release")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		Roadhog;
+	}
+
+	conditions
+	{
+		Event Player.roadhogPrimaryHeld == True;
+		Is Firing Primary(Event Player) == False;
+	}
+
+	actions
+	{
+		Event Player.roadhogPrimaryHeld = False;
+	}
+}
+
+rule("Roadhog Take a Breather cooldown")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		Roadhog;
+	}
+
+	conditions
+	{
+		Is Using Ability 1(Event Player) == True;
+		Event Player.roadhogBreatherActive == False;
+	}
+
+	actions
+	{
+		Event Player.roadhogBreatherActive = True;
+		Set Ability Cooldown(Event Player, Button(Ability 1), 6);
+		Set Healing Received(Event Player, 0);
+		Event Player.roadhogOverhealth = 150;
+		Wait(0.600, Ignore Condition);
+		Set Healing Received(Event Player, 100);
+		Chase Player Variable Over Time(Event Player, roadhogOverhealth, 0, 4, None);
+		Wait(4, Ignore Condition);
+		Stop Chasing Player Variable(Event Player, roadhogOverhealth);
+		Event Player.roadhogOverhealth = 0;
+		Event Player.roadhogBreatherActive = False;
+	}
+}
+
+rule("Roadhog overhealth decay")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		Roadhog;
+	}
+
+	actions
+	{
+		Set Max Health(Event Player, 86.667 + (Event Player.roadhogOverhealth / 7.500));
+		Wait(0.100, Ignore Condition);
+		Loop;
+	}
+}
+
+rule("Roadhog Pig Pen interact press")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		Roadhog;
+	}
+
+	conditions
+	{
+		Is Button Held(Event Player, Button(Interact)) == True;
+		Event Player.roadhogPigPenInputHeld == False;
+	}
+
+	actions
+	{
+		Event Player.roadhogPigPenInputHeld = True;
+		If(Event Player.roadhogPigPenActive == False && Event Player.roadhogPigPenCooldown == 0);
+			Event Player.roadhogPigPenActive = True;
+			Event Player.roadhogPigPenArmed = False;
+			Event Player.roadhogPigPenPos = Position Of(Event Player) + Facing Direction Of(Event Player) * 6;
+			Wait(0.500, Ignore Condition);
+			Event Player.roadhogPigPenArmed = True;
+		Else If(Event Player.roadhogPigPenActive == True && Event Player.roadhogPigPenArmed == True);
+			Event Player.roadhogTargets = Players Within Radius(Event Player.roadhogPigPenPos, 5, Opposite Team Of(Team Of(Event Player)), Surfaces);
+			For Player Variable(Event Player, roadhogLoopIndex, 0, Count Of(Event Player.roadhogTargets), 1);
+				Event Player.playerId = Event Player.roadhogTargets[Event Player.roadhogLoopIndex];
+				Damage(Event Player.playerId, Event Player, 80);
+				Apply Impulse(Event Player.playerId, Vector(0, 1, 0), 20, To World, Incorporate Contrary Motion);
+			End;
+			Apply Impulse(Event Player, Direction Towards(Event Player.roadhogPigPenPos, Event Player), 18, To World, Incorporate Contrary Motion);
+			Apply Impulse(Event Player, Vector(0, 1, 0), 12, To World, Incorporate Contrary Motion);
+			Event Player.roadhogPigPenActive = False;
+			Event Player.roadhogPigPenArmed = False;
+			Event Player.roadhogPigPenCooldown = 12;
+		End;
+	}
+}
+
+rule("Roadhog Pig Pen interact release")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		Roadhog;
+	}
+
+	conditions
+	{
+		Is Button Held(Event Player, Button(Interact)) == False;
+		Event Player.roadhogPigPenInputHeld == True;
+	}
+
+	actions
+	{
+		Event Player.roadhogPigPenInputHeld = False;
+	}
+}
+
+rule("Roadhog Pig Pen cooldown ticker")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		Roadhog;
+	}
+
+	conditions
+	{
+		Event Player.roadhogPigPenCooldown > 0;
+	}
+
+	actions
+	{
+		Wait(0.250, Ignore Condition);
+		Modify Player Variable(Event Player, roadhogPigPenCooldown, Subtract, 0.250);
+		Event Player.roadhogPigPenCooldown = Max(0, Event Player.roadhogPigPenCooldown);
+		Loop If(Event Player.roadhogPigPenCooldown > 0);
+	}
+}
