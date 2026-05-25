@@ -61,6 +61,7 @@ rule("Uppercut")
 		Enable Movement Collision With Players(Event Player);
 		Allow Button(Event Player, Button(Melee));
 		Allow Button(Event Player, Button(Primary Fire));
+        Allow Button(Event Player, Button(Ability 1));
         Allow Button(Event Player, Button(Ability 2));
 		Set Secondary Fire Enabled(Event Player, True);
 		Wait(0.350, Ignore Condition);
