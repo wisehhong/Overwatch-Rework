@@ -14,8 +14,8 @@ rule("Doomfist Uppercut HUD")
 
 	actions
 	{
-		Create HUD Text(Event Player, Custom String("Uppercut: {0}", Event Player.uppercutCooldown), Null, Null, Right, 5,
-		Color(White), Color(White), Color(White), Visible To And String, Default Visibility);
+		Create HUD Text(Event Player, Custom String("Uppercut: {0}", Event Player.uppercutCooldown), Null, Null, Right, 5, Color(White),
+			Color(White), Color(White), Visible To and String, Default Visibility);
 		Event Player.uppercutHudId = Last Text ID;
 		Event Player.uppercutHudVisible = True;
 	}
@@ -54,14 +54,14 @@ rule("Uppercut")
 
 	conditions
 	{
-        Is Button Held(Event Player, Button(Interact)) == True;
+		Is Button Held(Event Player, Button(Interact)) == True;
 		Is Using Ability 2(Event Player) == False;
 		Is Using Ability 1(Event Player) == False;
 		Is Firing Secondary(Event Player) == False;
-        Is Using Ultimate(Event Player) == False;
+		Is Using Ultimate(Event Player) == False;
 		Event Player.uppercutCooldown == 0;
 		(Has Status(Event Player, Frozen) || Has Status(Event Player, Asleep) || Has Status(Event Player, Frozen) || Has Status(
-		Event Player, Stunned) || Has Status(Event Player, Knocked Down) || Has Status(Event Player, Rooted)) == False;
+			Event Player, Stunned) || Has Status(Event Player, Knocked Down) || Has Status(Event Player, Rooted)) == False;
 	}
 
 	actions
@@ -85,7 +85,7 @@ rule("Uppercut")
 		Apply Impulse(Event Player, Vector(0, 1, 0), 40, To World, Incorporate Contrary Motion);
 		Wait(0.100, Ignore Condition);
 		Apply Impulse(Event Player, Vector(0, -1, 0), Max(0, Speed Of In Direction(Event Player, Vector(0, 1, 0))), To World,
-		Incorporate Contrary Motion);
+			Incorporate Contrary Motion);
 		Wait(0.016, Ignore Condition);
 		Apply Impulse(Event Player, Vector(0, 1, 0), 2.500, To World, Incorporate Contrary Motion);
 		Set Gravity(Event Player, 0);
@@ -93,8 +93,8 @@ rule("Uppercut")
 		Enable Movement Collision With Players(Event Player);
 		Allow Button(Event Player, Button(Melee));
 		Allow Button(Event Player, Button(Primary Fire));
-        Allow Button(Event Player, Button(Ability 1));
-        Allow Button(Event Player, Button(Ability 2));
+		Allow Button(Event Player, Button(Ability 1));
+		Allow Button(Event Player, Button(Ability 2));
 		Set Secondary Fire Enabled(Event Player, True);
 		Wait(0.350, Ignore Condition);
 		Stop Forcing Throttle(Event Player);
@@ -123,8 +123,8 @@ rule("Uppercut cooldown ticker")
 
 	actions
 	{
-		Wait(1.000, Ignore Condition);
-		Modify Player Variable(Event Player, uppercutCooldown, Subtract, 1.000);
+		Wait(1, Ignore Condition);
+		Event Player.uppercutCooldown -= 1;
 		Event Player.uppercutCooldown = Max(0, Event Player.uppercutCooldown);
 		Loop If(Event Player.uppercutCooldown > 0);
 	}
@@ -149,8 +149,8 @@ rule("slam damage hud")
 		If(Event Player.slamTimerHudVisible == True);
 			Destroy HUD Text(Event Player.slamTimerHudId);
 		End;
-		Create HUD Text(Event Player, Custom String("Slam Damage: {0}", Round To Integer(Event Player.slamTimer / 60 * 100, To
-			Nearest)), Null, Null, Top, 0.650, Color(Blue), Color(White), Color(Blue), Visible To And String, Default Visibility);
+		Create HUD Text(Event Player, Custom String("Slam Damage: {0}", Round To Integer(Event Player.slamTimer / 60 * 100, To Nearest)),
+			Null, Null, Top, 0.650, Color(Blue), Color(White), Color(Blue), Visible To and String, Default Visibility);
 		Event Player.slamTimerHudId = Last Text ID;
 		Event Player.slamTimerHudVisible = True;
 		Wait(0.016, Ignore Condition);
@@ -161,8 +161,6 @@ rule("slam damage hud")
 		End;
 	}
 }
-
-       
 
 rule("Uppercut Momentum")
 {
@@ -318,10 +316,9 @@ rule("(ALL SLAM) EVERYWHERE New slam indicator & allowance")
 					Visible To Position and Radius);
 				Event Player.BottomLine = Last Created Entity;
 				"TOP LINE"
-				Create Effect(Event Player, Ring, Color(Blue), Update Every Frame(Event Player.slamRaycastEndPos + Normalize(
-					Facing Direction Of(Event Player) * Vector(1, 0, 1)) * 8 + Normalize(Cross Product(Facing Direction Of(Event Player) * Vector(
-					1, 0, 1), Vector(0, 1, 0))) * 4.463) + Vector(0, 0.150, 0), 0.200,
-					Visible To Position and Radius);
+				Create Effect(Event Player, Ring, Color(Blue), Update Every Frame(Event Player.slamRaycastEndPos + Normalize(Facing Direction Of(
+					Event Player) * Vector(1, 0, 1)) * 8 + Normalize(Cross Product(Facing Direction Of(Event Player) * Vector(1, 0, 1), Vector(0,
+					1, 0))) * 4.463) + Vector(0, 0.150, 0), 0.200, Visible To Position and Radius);
 				Event Player.TopLine = Last Created Entity;
 				"RIGHT SIDE"
 				Create Effect(Event Player, Ring, Color(Blue), Update Every Frame(Event Player.slamRaycastEndPos + Normalize(Cross Product(
@@ -329,10 +326,9 @@ rule("(ALL SLAM) EVERYWHERE New slam indicator & allowance")
 					Visible To Position and Radius);
 				Event Player.RightLine = Last Created Entity;
 				"LEFT SIDE"
-				Create Effect(Event Player, Ring, Color(Blue), Update Every Frame(Event Player.slamRaycastEndPos + Normalize(
-					Facing Direction Of(Event Player) * Vector(1, 0, 1)) * 8 + Normalize(Cross Product(Facing Direction Of(Event Player) * Vector(
-					1, 0, 1), Vector(0, 1, 0))) * -4.463) + Vector(0, 0.150, 0), 0.200,
-					Visible To Position and Radius);
+				Create Effect(Event Player, Ring, Color(Blue), Update Every Frame(Event Player.slamRaycastEndPos + Normalize(Facing Direction Of(
+					Event Player) * Vector(1, 0, 1)) * 8 + Normalize(Cross Product(Facing Direction Of(Event Player) * Vector(1, 0, 1), Vector(0,
+					1, 0))) * -4.463) + Vector(0, 0.150, 0), 0.200, Visible To Position and Radius);
 				Event Player.LeftLine = Last Created Entity;
 				Event Player.DiamondIndicator = Array(Event Player.BottomLine, Event Player.TopLine, Event Player.RightLine,
 					Event Player.LeftLine);
@@ -496,13 +492,16 @@ rule("start slam timer (REVAMP)")
 
 	actions
 	{
-		Event Player.slamTimer = 0;
-		Chase Player Variable Over Time(Event Player, slamTimer, 125, 1.270, None);
+		Event Player.slamTimer = 30;
+		Chase Player Variable Over Time(Event Player, slamTimer, 9999, 72, None);
 		Disallow Button(Event Player, Button(Ability 2));
 		Disallow Button(Event Player, Button(Ability 1));
 		Disallow Button(Event Player, Button(Secondary Fire));
 		Wait(0.200, Ignore Condition);
 		Wait Until(Is On Ground(Event Player) || Ability Cooldown(Event Player, Button(Ability 1)) == True, 999999);
+		If(Event Player.slamTimer >= 63.100 && Event Player.slamTimer <= 68.900);
+			Event Player.slamTimer = 65.010;
+		End;
 		Event Player.slamTimer = Max(0, Event Player.slamTimer - 0.400);
 		Stop Chasing Player Variable(Event Player, slamTimer);
 		Set Damage Dealt(Event Player, Event Player.slamTimer / 60 * 100);
@@ -513,4 +512,3 @@ rule("start slam timer (REVAMP)")
 		Set Damage Dealt(Event Player, 100);
 	}
 }
-
